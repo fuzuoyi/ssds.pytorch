@@ -195,6 +195,19 @@ class Solver(object):
             print('Loading initial model weights from {:s}'.format(self.checkpoint))
             self.resume_checkpoint(self.checkpoint)
 
+        else:
+
+            def xavier(param):
+                init.xavier_uniform_(param)
+
+            def weights_init(m):
+                if isinstance(m, nn.Conv2d):
+                    xavier(m.weight.data)
+                    m.bias.data.zero_()
+            self.model.extras.apply(weights_init)
+            self.model.loc.apply(weights_init)
+            self.model.conf.apply(weights_init)
+
         start_epoch = 0
         return start_epoch
 
