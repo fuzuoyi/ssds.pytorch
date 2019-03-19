@@ -9,9 +9,9 @@ MODEL:
   ASPECT_RATIOS: [[1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2], [1, 2]]
 
 TRAIN:
-  MAX_EPOCHS: 2
-  CHECKPOINTS_EPOCHS: 1
-  BATCH_SIZE: 32
+  MAX_EPOCHS: 240
+  CHECKPOINTS_EPOCHS: 10
+  BATCH_SIZE: 64
   TRAINABLE_SCOPE: 'base,norm,extras,loc,conf'
   RESUME_SCOPE: 'base,norm,extras,loc,conf'
   OPTIMIZER:
@@ -37,7 +37,7 @@ POST_PROCESS:
 
 DATASET:
   DATASET: 'voc'
-  DATASET_DIR: 'F:/__DATASET/VOCdevkit'
+  DATASET_DIR: './data/VOCdevkit'
   TRAIN_SETS: [['2007', 'trainval'], ['2012', 'trainval']]
   TEST_SETS:  [['2007', 'test']]
 
