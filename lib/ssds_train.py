@@ -194,22 +194,22 @@ class Solver(object):
         # for module in self.cfg.TRAIN.TRAINABLE_SCOPE.split(','):
         #     if hasattr(self.model, module):
         #         getattr(self.model, module).apply(self.weights_init)
-        if self.checkpoint:
-            print('Loading initial model weights from {:s}'.format(self.checkpoint))
-            self.resume_checkpoint(self.checkpoint)
+        # if self.checkpoint:
+        #     print('Loading initial model weights from {:s}'.format(self.checkpoint))
+        #     self.resume_checkpoint(self.checkpoint)
 
-        else:
+        # else:
 
-            def xavier(param):
-                init.xavier_uniform_(param)
+        def xavier(param):
+            init.xavier_uniform_(param)
 
-            def weights_init(m):
-                if isinstance(m, nn.Conv2d):
-                    xavier(m.weight.data)
-                    m.bias.data.zero_()
-            self.model.extras.apply(weights_init)
-            self.model.loc.apply(weights_init)
-            self.model.conf.apply(weights_init)
+        def weights_init(m):
+            if isinstance(m, nn.Conv2d):
+                xavier(m.weight.data)
+                m.bias.data.zero_()
+        self.model.extras.apply(weights_init)
+        self.model.loc.apply(weights_init)
+        self.model.conf.apply(weights_init)
 
         start_epoch = 0
         return start_epoch
@@ -230,7 +230,12 @@ class Solver(object):
 
     def train_model(self):
         previous = self.find_previous()
-        if previous:
+
+        if self.checkpoint:
+            print('Loading initial model weights from {:s}'.format(self.checkpoint))
+            self.resume_checkpoint(self.checkpoint)
+            start_epoch = self.cfg.RESUME_START_EPOCH
+        elif previous:
             start_epoch = previous[0][-1]
             self.resume_checkpoint(previous[1][-1])
         else:
@@ -259,8 +264,19 @@ class Solver(object):
                 self.save_checkpoints(epoch)
 
     def test_model(self):
-        previous = self.find_previous()
-        if previous:
+        if self.checkpoint:
+            sys.stdout.write('\rCheckpoint {}:\n'.format(self.checkpoint))
+            self.resume_checkpoint(self.checkpoint)
+            if 'eval' in cfg.PHASE:
+                self.eval_epoch(self.model, self.eval_loader, self.detector, self.criterion, self.writer, 0, self.use_gpu)
+            if 'test' in cfg.PHASE:
+                self.test_epoch(self.model, self.test_loader, self.detector, self.output_dir , self.use_gpu)
+            if 'visualize' in cfg.PHASE:
+                self.visualize_epoch(self.model, self.visualize_loader, self.priorbox, self.writer, 0,  self.use_gpu)
+    
+        else:
+                
+            previous = self.find_previous()
             for epoch, resume_checkpoint in zip(previous[0], previous[1]):
                 if self.cfg.TEST.TEST_SCOPE[0] <= epoch <= self.cfg.TEST.TEST_SCOPE[1]:
                     sys.stdout.write('\rEpoch {epoch:d}/{max_epochs:d}:\n'.format(epoch=epoch, max_epochs=self.cfg.TEST.TEST_SCOPE[1]))
@@ -271,15 +287,7 @@ class Solver(object):
                         self.test_epoch(self.model, self.test_loader, self.detector, self.output_dir , self.use_gpu)
                     if 'visualize' in cfg.PHASE:
                         self.visualize_epoch(self.model, self.visualize_loader, self.priorbox, self.writer, epoch,  self.use_gpu)
-        else:
-            sys.stdout.write('\rCheckpoint {}:\n'.format(self.checkpoint))
-            self.resume_checkpoint(self.checkpoint)
-            if 'eval' in cfg.PHASE:
-                self.eval_epoch(self.model, self.eval_loader, self.detector, self.criterion, self.writer, 0, self.use_gpu)
-            if 'test' in cfg.PHASE:
-                self.test_epoch(self.model, self.test_loader, self.detector, self.output_dir , self.use_gpu)
-            if 'visualize' in cfg.PHASE:
-                self.visualize_epoch(self.model, self.visualize_loader, self.priorbox, self.writer, 0,  self.use_gpu)
+
 
 
     def train_epoch(self, model, data_loader, optimizer, criterion, writer, epoch, use_gpu):

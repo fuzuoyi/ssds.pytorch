@@ -44,4 +44,5 @@ DATASET:
 EXP_DIR: './experiments/models/ssd_vgg16_voc'
 LOG_DIR: './experiments/models/ssd_vgg16_voc'
 # RESUME_CHECKPOINT: './weights/ssd/vgg16_ssd_voc_76.pth'
+RESUME_START_EPOCH: 0
 PHASE: ['train']

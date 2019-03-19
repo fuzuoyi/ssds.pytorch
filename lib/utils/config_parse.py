@@ -193,6 +193,7 @@ __C.DATASET.NUM_WORKERS = 24
 __C.EXP_DIR = osp.abspath(osp.join(__C.ROOT_DIR, 'experiments/models/'))
 __C.LOG_DIR = __C.EXP_DIR
 __C.RESUME_CHECKPOINT = ''
+__C.RESUME_START_EPOCH = ''
 __C.CHECKPOINTS_PREFIX = '{}_{}_{}'.format(__C.MODEL.SSDS, __C.MODEL.NETS, __C.DATASET.DATASET)
 __C.PHASE = ['train', 'eval', 'test']
 
