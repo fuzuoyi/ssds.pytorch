@@ -13,6 +13,7 @@ import torch.optim as optim
 from torch.optim import lr_scheduler
 import torch.utils.data as data
 import torch.nn.init as init
+import torch.nn as nn
 
 from tensorboardX import SummaryWriter
 

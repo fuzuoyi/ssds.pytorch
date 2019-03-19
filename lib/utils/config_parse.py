@@ -183,7 +183,7 @@ __C.DATASET.TRAIN_BATCH_SIZE = __C.TRAIN.BATCH_SIZE
 # test batch size
 __C.DATASET.TEST_BATCH_SIZE = __C.TEST.BATCH_SIZE
 # number of workers to extract datas
-__C.DATASET.NUM_WORKERS = 8
+__C.DATASET.NUM_WORKERS = 24
 
 
 # ---------------------------------------------------------------------------- #
