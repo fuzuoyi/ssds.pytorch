@@ -11,7 +11,7 @@ MODEL:
 TRAIN:
   MAX_EPOCHS: 240
   CHECKPOINTS_EPOCHS: 10
-  BATCH_SIZE: 48
+  BATCH_SIZE: 64
   TRAINABLE_SCOPE: 'base,norm,extras,loc,conf'
   RESUME_SCOPE: 'base,norm,extras,loc,conf'
   OPTIMIZER:

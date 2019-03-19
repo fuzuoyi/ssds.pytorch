@@ -56,8 +56,10 @@ class Solver(object):
             self.model.cuda()
             self.priors.cuda()
             cudnn.benchmark = True
-            # if torch.cuda.device_count() > 1:
-                # self.model = torch.nn.DataParallel(self.model).module
+            self.para_model = self.model
+            if torch.cuda.device_count() > 1:
+                self.para_model = torch.nn.DataParallel(self.model)
+                self.model = self.para_model.module
 
         # Print the model architecture and parameters
         print('Model architectures:\n{}\n'.format(self.model))
@@ -245,7 +247,7 @@ class Solver(object):
             if epoch > warm_up:
                 self.exp_lr_scheduler.step(epoch-warm_up)
             if 'train' in cfg.PHASE:
-                self.train_epoch(self.model, self.train_loader, self.optimizer, self.criterion, self.writer, epoch, self.use_gpu)
+                self.train_epoch(self.para_model, self.train_loader, self.optimizer, self.criterion, self.writer, epoch, self.use_gpu)
             if 'eval' in cfg.PHASE:
                 self.eval_epoch(self.model, self.eval_loader, self.detector, self.criterion, self.writer, epoch, self.use_gpu)
             if 'test' in cfg.PHASE:
