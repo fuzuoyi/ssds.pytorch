@@ -65,7 +65,8 @@ class ObjectDetector:
         
         # preprocess image
         _t['preprocess'].tic()
-        x = Variable(self.preprocessor(img)[0].unsqueeze(0),volatile=True)
+        with torch.no_grad():
+            x = Variable(self.preprocessor(img)[0].unsqueeze(0))
         if self.use_gpu:
             x = x.cuda()
         if self.half:
