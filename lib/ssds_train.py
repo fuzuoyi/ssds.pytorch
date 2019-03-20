@@ -503,45 +503,68 @@ class Solver(object):
         _t = Timer()
 
         for i in iter(range((num_images))):
+            _t.tic()
+
             img = dataset.pull_image(i)
-            scale = [img.shape[1], img.shape[0], img.shape[1], img.shape[0]]
+            # scale = [img.shape[1], img.shape[0], img.shape[1], img.shape[0]]
+            h,w = img.shape[0], img.shape[1]
             if use_gpu:
                 with torch.no_grad():
                     images = Variable(dataset.preproc(img)[0].unsqueeze(0).cuda())
             else:
                 with torch.no_grad():              
                     images = Variable(dataset.preproc(img)[0].unsqueeze(0))
-
-            _t.tic()
+            # _t.tic()
             # forward
             out = model(images, phase='eval')
 
-            # detect
+            # detect result: [N, num_class, top_k, 5]
             detections = detector.forward(out)
-
-            time = _t.toc()
+            # print('shape',detections.shape)
+            # time = _t.toc()
 
             # TODO: make it smart:
-            for j in range(1, num_classes):
-                cls_dets = list()
-                for det in detections[0][j]:
-                    if det[0] > 0:
-                        d = det.cpu().numpy()
-                        score, box = d[0], d[1:]
-                        box *= scale
-                        box = np.append(box, score)
-                        cls_dets.append(box)
-                if len(cls_dets) == 0:
-                    cls_dets = empty_array
-                all_boxes[j][i] = np.array(cls_dets)
+            # for j in range(1, num_classes):
+            #     cls_dets = list()
+            #     for det in detections[0][j]:
+            #         if det[0] > 0:
+            #             d = det.cpu().numpy()
+            #             score, box = d[0], d[1:]
+            #             box *= scale
+            #             box = np.append(box, score)
+            #             cls_dets.append(box)
+            #     if len(cls_dets) == 0:
+            #         cls_dets = empty_array
+            #     all_boxes[j][i] = np.array(cls_dets)
 
+            for j in range(1, detections.size(1)):
+                dets = detections[0, j, :]
+                mask = dets[:, 0].gt(0.).expand(5, dets.size(0)).t()
+                dets = torch.masked_select(dets, mask).view(-1, 5)
+                if dets.size(0) == 0:
+                    continue
+                boxes = dets[:, 1:]
+                boxes[:, 0] *= w
+                boxes[:, 2] *= w
+                boxes[:, 1] *= h
+                boxes[:, 3] *= h
+                scores = dets[:, 0].cpu().numpy()
+                cls_dets = np.hstack((boxes.cpu().numpy(),
+                                    scores[:, np.newaxis])).astype(np.float32,
+                                                                    copy=False)
+                all_boxes[j][i] = cls_dets
             # log per iter
-            log = '\r==>Test: || {iters:d}/{epoch_size:d} in {time:.3f}s [{prograss}]\r'.format(
-                    prograss='#'*int(round(10*i/num_images)) + '-'*int(round(10*(1-i/num_images))), iters=i, epoch_size=num_images,
+            # log = '\r==>Test: || {iters:d}/{epoch_size:d} in {time:.3f}s \r'.format(
+            #         prograss='#'*int(round(10*i/num_images)) + '-'*int(round(10*(1-i/num_images))), iters=i, epoch_size=num_images,
+            #         time=time)
+            time = _t.toc()
+
+            log = '\r==>Test: || {iters:d}/{epoch_size:d} in {time:.3f}s \r'.format(iters=i, epoch_size=num_images,
                     time=time)
             sys.stdout.write(log)
             sys.stdout.flush()
 
+      
         # write result to pkl
         with open(os.path.join(output_dir, 'detections.pkl'), 'wb') as f:
             pickle.dump(all_boxes, f, pickle.HIGHEST_PROTOCOL)

@@ -30,7 +30,10 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Train a ssds.pytorch network')
     parser.add_argument('--cfg', dest='config_file',
             help='optional config file', default=None, type=str)
-
+    
+    ## for debug
+    sys.argv.append('--cfg')
+    sys.argv.append('./experiments/cfgs/ssd_vgg16_train_voc.yml')
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
