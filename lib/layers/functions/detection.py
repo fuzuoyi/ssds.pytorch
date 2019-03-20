@@ -134,7 +134,7 @@ class Detect(Function):
                 _t['score_mask'].tic()
                 scores = conf_scores[cl][c_mask]
                 scores_time+=_t['score_mask'].toc()
-                if scores.dim() == 0:
+                if scores.size(0)== 0:
                     continue
                 _t['box_mask'].tic()
                 # l_mask = c_mask.unsqueeze(1).expand_as(decoded_boxes)
