@@ -660,5 +660,5 @@ def train_model():
 
 def test_model():
     s = Solver()
-    s.test_model()
+    # s.test_model()
     return True

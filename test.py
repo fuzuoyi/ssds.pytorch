@@ -33,7 +33,7 @@ def parse_args():
     
     ## for debug
     sys.argv.append('--cfg')
-    sys.argv.append('./experiments/cfgs/ssd_vgg16_train_voc.yml')
+    sys.argv.append('./experiments/cfgs/ssd_xbase_train_voc.yml')
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
