@@ -109,40 +109,40 @@ class Detect(Function):
             #self.output.expand_(num, self.num_classes, self.top_k, 5)
         output = torch.zeros(num, self.num_classes, self.top_k, 5)
 
-        _t = {'decode': Timer(), 'misc': Timer(), 'box_mask':Timer(), 'score_mask':Timer(),'nms':Timer(), 'cpu':Timer(),'sort':Timer()}
-        gpunms_time = 0
-        scores_time=0
-        box_time=0
-        cpu_tims=0
-        sort_time=0
+        ##_t = {'decode': Timer(), 'misc': Timer(), 'box_mask':Timer(), 'score_mask':Timer(),'nms':Timer(), 'cpu':Timer(),'sort':Timer()}
+        ##gpunms_time = 0
+        ##scores_time=0
+        ##box_time=0
+        ##cpu_tims=0
+        ##sort_time=0
         decode_time=0
-        _t['misc'].tic()
+        ##_t['misc'].tic()
         # Decode predictions into bboxes.
         for i in range(num):
-            _t['decode'].tic()
+            ##_t['decode'].tic()
             decoded_boxes = decode(loc_data[i], prior_data, self.variance)
-            decode_time += _t['decode'].toc()
+            ##decode_time += _t['decode'].toc()
             # For each class, perform nms
             conf_scores = conf_preds[i].clone()
-            num_det = 0
+            # num_det = 0
             for cl in range(1, self.num_classes):
-                _t['cpu'].tic()
+                ##_t['cpu'].tic()
                 c_mask = conf_scores[cl].gt(self.conf_thresh).nonzero().view(-1)
-                cpu_tims+=_t['cpu'].toc()
+                ##cpu_tims+=_t['cpu'].toc()
                 if c_mask.dim() == 0:
                     continue
-                _t['score_mask'].tic()
+                ##_t['score_mask'].tic()
                 scores = conf_scores[cl][c_mask]
-                scores_time+=_t['score_mask'].toc()
+                ##scores_time+=_t['score_mask'].toc()
                 if scores.size(0)== 0:
                     continue
-                _t['box_mask'].tic()
+                ##_t['box_mask'].tic()
                 # l_mask = c_mask.unsqueeze(1).expand_as(decoded_boxes)
                 # boxes = decoded_boxes[l_mask].view(-1, 4)
                 boxes = decoded_boxes[c_mask, :]
-                box_time+=_t['box_mask'].toc()
+                ##box_time+=_t['box_mask'].toc()
                 # idx of highest scoring and non-overlapping boxes per class
-                _t['nms'].tic()
+                ##_t['nms'].tic()
                 # cls_dets = torch.cat((boxes, scores), 1)
                 # _, order = torch.sort(scores, 0, True)
                 # cls_dets = cls_dets[order]
@@ -150,11 +150,11 @@ class Detect(Function):
                 # cls_dets = cls_dets[keep.view(-1).long()]
                 ids, count = nms(boxes, scores, self.nms_thresh, self.top_k)
 
-                gpunms_time += _t['nms'].toc()
+                ##gpunms_time += _t['nms'].toc()
                 output[i, cl, :count] = \
                     torch.cat((scores[ids[:count]].unsqueeze(1),
                                boxes[ids[:count]]), 1)
-        nms_time= _t['misc'].toc()
+        ##nms_time= _t['misc'].toc()
         # print(nms_time, cpu_tims, scores_time,box_time,gpunms_time)
         # flt = self.output.view(-1, 5)
         # _, idx = flt[:, 0].sort(0)
