@@ -149,11 +149,11 @@ class VOCDetection(data.Dataset):
             (default: 'VOC2007')
     """
 
-    def __init__(self, root, image_sets, preproc=None, target_transform=AnnotationTransform(),
+    def __init__(self, root, image_sets, transform=None, target_transform=AnnotationTransform(),
                  dataset_name='VOC0712'):
         self.root = root
         self.image_set = image_sets
-        self.preproc = preproc
+        self.transform = transform
         self.target_transform = target_transform
         self.name = dataset_name
         self._annopath = os.path.join('%s', 'Annotations', '%s.xml')
@@ -175,14 +175,15 @@ class VOCDetection(data.Dataset):
             target = self.target_transform(target)
 
 
-        if self.preproc is not None:
-            img, target = self.preproc(img, target)
+        if self.transform is not None:
+            img, target = self.transform(img, target)
+            img = img[:, :, (2, 1, 0)]
             #print(img.size())
 
                     # target = self.target_transform(target, width, height)
         #print(target.shape)
-
-        return img, target
+        # return img, target
+        return torch.from_numpy(img).permute(2, 0, 1), target
 
     def __len__(self):
         return len(self.ids)
