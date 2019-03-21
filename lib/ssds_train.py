@@ -207,9 +207,13 @@ class Solver(object):
             if isinstance(m, nn.Conv2d):
                 xavier(m.weight.data)
                 m.bias.data.zero_()
-        self.model.extras.apply(weights_init)
-        self.model.loc.apply(weights_init)
-        self.model.conf.apply(weights_init)
+        try:
+            self.model.base.apply(weights_init)
+            self.model.extras.apply(weights_init)
+            self.model.loc.apply(weights_init)
+            self.model.conf.apply(weights_init)
+        except:
+            pass
 
         start_epoch = 0
         return start_epoch
