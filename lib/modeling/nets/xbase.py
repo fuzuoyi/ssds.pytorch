@@ -4,19 +4,28 @@ import torch.nn as nn
 base = {
     # 'x_pool': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'C', 512, 512, 512, 'M',
             # 512, 512, 512],
-    'x_pool': [64, 'M', 128, 'M', 256, 'C', 512, 'M', 256, 'C', 128, 'M',128, 'C', 64,'M']
+    'x_pool': [64, 'M', 128, 'M', 128, 'M', 256, 'M', 256, 'M', 128, 'M',128, 'M', 128, 'C']
 }
 
 
 
 def base_net(cfg, i, batch_norm=False):
+    print(cfg)
     layers = []
     in_channels = i
-    for v in cfg:
+    for k,v in enumerate(cfg):
         if v == 'M':
-            layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
+            # layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
+            conv2d = nn.Conv2d(cfg[k-1], cfg[k-1], kernel_size=1, padding=0, stride=2)
+            if batch_norm:
+                layers += [conv2d, nn.BatchNorm2d(cfg[k-1]), nn.ReLU(inplace=True)]
+            else:
+                layers += [conv2d, nn.ReLU(inplace=True)]
         elif v == 'C':
-            layers += [nn.MaxPool2d(kernel_size=2, stride=2, ceil_mode=True)]
+            # layers += [nn.MaxPool2d(kernel_size=2, stride=2, ceil_mode=True)]
+            conv2d = nn.Conv2d(cfg[k-1], cfg[k-1], kernel_size=3, padding=0, stride=2)
+            ## *** last layer 1*1*128 -> not use BN
+            layers += [conv2d, nn.ReLU(inplace=True)]
         else:
             conv2d = nn.Conv2d(in_channels, v, kernel_size=3, padding=1)
             if batch_norm:

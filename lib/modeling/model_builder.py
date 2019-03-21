@@ -7,8 +7,10 @@ from lib.modeling.ssds import rfb_lite
 from lib.modeling.ssds import fssd
 from lib.modeling.ssds import fssd_lite
 from lib.modeling.ssds import yolo
+from lib.modeling.ssds import xssd
 
-ssds_map = {
+ssds_map = {    
+                'xssd':xssd.build_xssd,
                 'ssd': ssd.build_ssd,
                 'ssd_lite': ssd_lite.build_ssd_lite,
                 'rfb': rfb.build_rfb,
