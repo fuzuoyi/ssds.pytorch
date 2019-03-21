@@ -10,7 +10,7 @@ MODEL:
 
 TRAIN:
   MAX_EPOCHS: 240
-  CHECKPOINTS_EPOCHS: 10
+  CHECKPOINTS_EPOCHS: 20
   BATCH_SIZE: 64
   TRAINABLE_SCOPE: 'base,norm,extras,loc,conf'
   RESUME_SCOPE: 'base,norm,extras,loc,conf'
@@ -20,7 +20,10 @@ TRAIN:
     MOMENTUM: 0.9
     WEIGHT_DECAY: 0.0001
   LR_SCHEDULER:
-    SCHEDULER: SGDR
+    # SCHEDULER: SGDR
+    SCHEDULER: multi_step
+    GAMMA: 0.1
+    STEPS: [155,195]
 
 TEST:
   BATCH_SIZE: 32
@@ -41,9 +44,10 @@ DATASET:
   TRAIN_SETS: [['2007', 'trainval'], ['2012', 'trainval']]
   TEST_SETS:  [['2007', 'test']]
 
-EXP_DIR: './experiments/models/ssd_vgg16_voc'
-LOG_DIR: './experiments/models/ssd_vgg16_voc'
-RESUME_CHECKPOINT: './weights/vgg16_ssd_voc_76.pth'
+EXP_DIR: './experiments/models/ssd_xbase_voc'
+LOG_DIR: './experiments/models/ssd_xbase_voc'
+# RESUME_CHECKPOINT: './weights/xbase_ssd_voc_76.pth'
 # RESUME_CHECKPOINT: './experiments/models/ssd_vgg16_voc/ssd_vgg16_voc_epoch_240.pth'
-RESUME_START_EPOCH: 0
-PHASE: []
+RESUME_CHECKPOINT: ''
+# RESUME_START_EPOCH: 0
+PHASE: ['train']

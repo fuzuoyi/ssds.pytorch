@@ -232,9 +232,10 @@ class Solver(object):
         previous = self.find_previous()
 
         if self.checkpoint:
+            self.initialize()
             print('Loading initial model weights from {:s}'.format(self.checkpoint))
             self.resume_checkpoint(self.checkpoint)
-            start_epoch = self.cfg.RESUME_START_EPOCH
+            start_epoch = int(self.cfg.RESUME_START_EPOCH)
         elif previous:
             start_epoch = previous[0][-1]
             self.resume_checkpoint(previous[1][-1])
@@ -246,6 +247,8 @@ class Solver(object):
 
         # warm_up epoch
         warm_up = self.cfg.TRAIN.LR_SCHEDULER.WARM_UP_EPOCHS
+        # print(type(start_epoch),type(self.max_epochs))
+
         for epoch in iter(range(start_epoch+1, self.max_epochs+1)):
             #learning rate
             sys.stdout.write('\rEpoch {epoch:d}/{max_epochs:d}:\n'.format(epoch=epoch, max_epochs=self.max_epochs))
@@ -660,5 +663,5 @@ def train_model():
 
 def test_model():
     s = Solver()
-    # s.test_model()
+    s.test_model()
     return True

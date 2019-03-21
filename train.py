@@ -4,7 +4,7 @@ import sys
 import os
 
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1,2"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,2"
 os.environ['OMP_NUM_THREADS'] = '1'
 
 import argparse
