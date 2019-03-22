@@ -182,6 +182,7 @@ class VOCDetection(data.Dataset):
             img = img[:, :, (2, 1, 0)]
             # img = img.transpose(2, 0, 1)
             target = np.hstack((boxes, np.expand_dims(labels, axis=1)))
+            # print(target)
             #print(img.size())
 
                     # target = self.target_transform(target, width, height)
@@ -223,6 +224,8 @@ class VOCDetection(data.Dataset):
         # gt = self.target_transform(anno, 1, 1)
         # gt = self.target_transform(anno)
         # return img_id[1], gt
+        # TODO:shuou be convert coords from percent to abs
+
         if self.target_transform is not None:
             anno = self.target_transform(anno)
         return anno
@@ -247,8 +250,9 @@ class VOCDetection(data.Dataset):
         height, width, _ = img.shape
         boxes = gt[:,:-1]
         labels = gt[:,-1]
-        boxes[:, 0::2] /= width
-        boxes[:, 1::2] /= height
+        # all ready percent coords
+        # boxes[:, 0::2] /= width
+        # boxes[:, 1::2] /= height
         labels = np.expand_dims(labels,1)
         targets = np.hstack((boxes,labels))
         

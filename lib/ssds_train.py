@@ -209,7 +209,7 @@ class Solver(object):
                 m.bias.data.zero_()
         try:
             self.model.base.apply(weights_init)
-            self.model.extras.apply(weights_init)
+            # self.model.extras.apply(weights_init)
             self.model.loc.apply(weights_init)
             self.model.conf.apply(weights_init)
         except:
