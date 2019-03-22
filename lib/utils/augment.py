@@ -416,9 +416,9 @@ class SSDAugmentation(object):
     def __call__(self, img, boxes, labels):
         img, boxes, labels =  self.augment(img, boxes, labels)
 
-        labels = np.expand_dims(labels,1)
-        target = np.hstack(boxes, labels)
-        return img, target
+        # labels = np.expand_dims(labels,1)
+        # target = np.hstack(boxes, labels)
+        return img,  boxes, labels
 
 def base_transform(image, size, mean):
     x = cv2.resize(image, (size, size)).astype(np.float32)

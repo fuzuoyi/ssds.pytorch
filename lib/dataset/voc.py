@@ -100,7 +100,7 @@ class AnnotationTransform(object):
             zip(VOC_CLASSES, range(len(VOC_CLASSES))))
         self.keep_difficult = keep_difficult
 
-    def __call__(self, target):
+    def __call__(self, target,width,height):
         """
         Arguments:
             target (annotation) : the target annotation to be made usable
@@ -121,7 +121,7 @@ class AnnotationTransform(object):
             for i, pt in enumerate(pts):
                 cur_pt = int(bbox.find(pt).text) - 1
                 # scale height or width
-                #cur_pt = cur_pt / width if i % 2 == 0 else cur_pt / height
+                cur_pt = cur_pt / width if i % 2 == 0 else cur_pt / height
                 bndbox.append(cur_pt)
             label_idx = self.class_to_ind[name]
             bndbox.append(label_idx)
@@ -172,12 +172,16 @@ class VOCDetection(data.Dataset):
         height, width, _ = img.shape
 
         if self.target_transform is not None:
-            target = self.target_transform(target)
+            target = self.target_transform(target, width, height)
 
 
         if self.transform is not None:
-            img, target = self.transform(img, target)
+            target = np.array(target)
+            img, boxes, labels = self.transform(img, target[:, :4], target[:, 4])
+            # to rgb
             img = img[:, :, (2, 1, 0)]
+            # img = img.transpose(2, 0, 1)
+            target = np.hstack((boxes, np.expand_dims(labels, axis=1)))
             #print(img.size())
 
                     # target = self.target_transform(target, width, height)
