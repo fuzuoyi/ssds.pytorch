@@ -70,8 +70,8 @@ class Solver(object):
 
         # print trainable scope
         print('Trainable scope: {}'.format(cfg.TRAIN.TRAINABLE_SCOPE))
-        trainable_param = self.trainable_param(cfg.TRAIN.TRAINABLE_SCOPE)
-        self.optimizer = self.configure_optimizer(trainable_param, cfg.TRAIN.OPTIMIZER)
+        # trainable_param = self.trainable_param(cfg.TRAIN.TRAINABLE_SCOPE)
+        self.optimizer = self.configure_optimizer(self.model.parameters(), cfg.TRAIN.OPTIMIZER)
         self.exp_lr_scheduler = self.configure_lr_scheduler(self.optimizer, cfg.TRAIN.LR_SCHEDULER)
         self.max_epochs = cfg.TRAIN.MAX_EPOCHS
 
@@ -236,13 +236,13 @@ class Solver(object):
         previous = self.find_previous()
 
         if self.checkpoint:
-            self.initialize()
+            # self.initialize()
             print('Loading initial model weights from {:s}'.format(self.checkpoint))
-            self.resume_checkpoint(self.checkpoint)
-            start_epoch = int(self.cfg.RESUME_START_EPOCH)
-        elif previous:
-            start_epoch = previous[0][-1]
-            self.resume_checkpoint(previous[1][-1])
+            # self.resume_checkpoint(self.checkpoint)
+            # start_epoch = int(self.cfg.RESUME_START_EPOCH)
+        # elif previous:
+        #     start_epoch = previous[0][-1]
+        #     self.resume_checkpoint(previous[1][-1])
         else:
             start_epoch = self.initialize()
 
@@ -642,6 +642,8 @@ class Solver(object):
             scheduler = lr_scheduler.ExponentialLR(optimizer, gamma=cfg.GAMMA)
         elif cfg.SCHEDULER == 'SGDR':
             scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=cfg.MAX_EPOCHS)
+        # elif cfg.SCHEDULER == 'Plateau':
+        #     scheduler = lr_scheduler.ReduceLROnPlateau(optimizer,)
         else:
             AssertionError('scheduler can not be recognized.')
         return scheduler

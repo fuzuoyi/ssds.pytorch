@@ -48,8 +48,8 @@ DATASET:
 
 EXP_DIR: './experiments/models/ssd_vgg16_voc'
 LOG_DIR: './experiments/models/ssd_vgg16_voc'
-RESUME_CHECKPOINT: './weights/vgg16_reducedfc.pth'
-# RESUME_CHECKPOINT: './weights/vgg16_ssd_voc_76.pth'
+# RESUME_CHECKPOINT: './weights/vgg16_reducedfc.pth'
+RESUME_CHECKPOINT: './weights/vgg16_ssd_voc_76.pth'
 # RESUME_CHECKPOINT: './experiments/models/ssd_vgg16_voc/ssd_vgg16_voc_epoch_160.pth'
 RESUME_START_EPOCH: 0
-PHASE: ['train']
+PHASE: ['test']

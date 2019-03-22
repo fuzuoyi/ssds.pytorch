@@ -100,7 +100,7 @@ class AnnotationTransform(object):
             zip(VOC_CLASSES, range(len(VOC_CLASSES))))
         self.keep_difficult = keep_difficult
 
-    def __call__(self, target,width,height):
+    def __call__(self, target):
         """
         Arguments:
             target (annotation) : the target annotation to be made usable
@@ -121,7 +121,7 @@ class AnnotationTransform(object):
             for i, pt in enumerate(pts):
                 cur_pt = int(bbox.find(pt).text) - 1
                 # scale height or width
-                cur_pt = cur_pt / width if i % 2 == 0 else cur_pt / height
+                # cur_pt = cur_pt / width if i % 2 == 0 else cur_pt / height
                 bndbox.append(cur_pt)
             label_idx = self.class_to_ind[name]
             bndbox.append(label_idx)
@@ -149,11 +149,11 @@ class VOCDetection(data.Dataset):
             (default: 'VOC2007')
     """
 
-    def __init__(self, root, image_sets, transform=None, target_transform=AnnotationTransform(),
+    def __init__(self, root, image_sets, preproc=None, target_transform=AnnotationTransform(),
                  dataset_name='VOC0712'):
         self.root = root
         self.image_set = image_sets
-        self.transform = transform
+        self.preproc = preproc
         self.target_transform = target_transform
         self.name = dataset_name
         self._annopath = os.path.join('%s', 'Annotations', '%s.xml')
@@ -172,23 +172,14 @@ class VOCDetection(data.Dataset):
         height, width, _ = img.shape
 
         if self.target_transform is not None:
-            target = self.target_transform(target, width, height)
+            target = self.target_transform(target)
 
 
-        if self.transform is not None:
-            target = np.array(target)
-            img, boxes, labels = self.transform(img, target[:, :4], target[:, 4])
-            # to rgb
-            img = img[:, :, (2, 1, 0)]
-            # img = img.transpose(2, 0, 1)
-            target = np.hstack((boxes, np.expand_dims(labels, axis=1)))
-            # print(target)
-            #print(img.size())
+        if self.preproc is not None:
+            img, target = self.preproc(img, target)
 
-                    # target = self.target_transform(target, width, height)
-        #print(target.shape)
-        # return img, target
-        return torch.from_numpy(img).permute(2, 0, 1), target
+        # return torch.from_numpy(img).permute(2, 0, 1), target
+        return img, target
 
     def __len__(self):
         return len(self.ids)
