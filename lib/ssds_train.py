@@ -273,7 +273,8 @@ class Solver(object):
     def test_model(self):
         if self.checkpoint:
             sys.stdout.write('\rCheckpoint {}:\n'.format(self.checkpoint))
-            self.resume_checkpoint(self.checkpoint)
+            # self.resume_checkpoint(self.checkpoint)
+            self.model.load_state_dict(torch.load(self.checkpoint))
             if 'eval' in cfg.PHASE:
                 self.eval_epoch(self.model, self.eval_loader, self.detector, self.criterion, self.writer, 0, self.use_gpu)
             if 'test' in cfg.PHASE:
@@ -510,7 +511,7 @@ class Solver(object):
         _t = Timer()
 
         for i in iter(range((num_images))):
-            _t.tic()
+            # _t.tic()
 
             img = dataset.pull_image(i)
             # scale = [img.shape[1], img.shape[0], img.shape[1], img.shape[0]]
@@ -521,14 +522,15 @@ class Solver(object):
             else:
                 with torch.no_grad():              
                     images = Variable(dataset.preproc(img)[0].unsqueeze(0))
-            # _t.tic()
+            _t.tic()
             # forward
             out = model(images, phase='eval')
+            # time = _t.toc()
 
             # detect result: [N, num_class, top_k, 5]
             detections = detector.forward(out)
             # print('shape',detections.shape)
-            # time = _t.toc()
+            time = _t.toc()
 
             # TODO: make it smart:
             # for j in range(1, num_classes):
@@ -564,7 +566,7 @@ class Solver(object):
             # log = '\r==>Test: || {iters:d}/{epoch_size:d} in {time:.3f}s \r'.format(
             #         prograss='#'*int(round(10*i/num_images)) + '-'*int(round(10*(1-i/num_images))), iters=i, epoch_size=num_images,
             #         time=time)
-            time = _t.toc()
+            # time = _t.toc()
 
             log = '\r==>Test: || {iters:d}/{epoch_size:d} in {time:.3f}s \r'.format(iters=i, epoch_size=num_images,
                     time=time)

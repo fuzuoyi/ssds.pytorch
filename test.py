@@ -3,7 +3,7 @@ from __future__ import print_function
 import sys
 import os
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 os.environ['OMP_NUM_THREADS'] = '1'
 
 import argparse
