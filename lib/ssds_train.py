@@ -115,28 +115,6 @@ class Solver(object):
             pretrained_dict = {'.'.join(k.split('.')[1:]): v for k, v in list(checkpoint.items())}
             checkpoint = pretrained_dict
 
-        # change the name of the weights which exists in other model
-        # change_dict = {
-        #         'conv1.weight':'base.0.weight',
-        #         'bn1.running_mean':'base.1.running_mean',
-        #         'bn1.running_var':'base.1.running_var',
-        #         'bn1.bias':'base.1.bias',
-        #         'bn1.weight':'base.1.weight',
-        #         }
-        # for k, v in list(checkpoint.items()):
-        #     for _k, _v in list(change_dict.items()):
-        #         if _k == k:
-        #             new_key = k.replace(_k, _v)
-        #             checkpoint[new_key] = checkpoint.pop(k)
-        # change_dict = {'layer1.{:d}.'.format(i):'base.{:d}.'.format(i+4) for i in range(20)}
-        # change_dict.update({'layer2.{:d}.'.format(i):'base.{:d}.'.format(i+7) for i in range(20)})
-        # change_dict.update({'layer3.{:d}.'.format(i):'base.{:d}.'.format(i+11) for i in range(30)})
-        # for k, v in list(checkpoint.items()):
-        #     for _k, _v in list(change_dict.items()):
-        #         if _k in k:
-        #             new_key = k.replace(_k, _v)
-        #             checkpoint[new_key] = checkpoint.pop(k)
-
         resume_scope = self.cfg.TRAIN.RESUME_SCOPE
         # extract the weights based on the resume scope
         if resume_scope != '':
@@ -188,17 +166,8 @@ class Solver(object):
                 m.state_dict()[key][...] = 0
 
 
-    def initialize(self):
+    def initialize(self, init_scope):
         # TODO: ADD INIT ways
-        # raise ValueError("Fan in and fan out can not be computed for tensor with less than 2 dimensions")
-        # for module in self.cfg.TRAIN.TRAINABLE_SCOPE.split(','):
-        #     if hasattr(self.model, module):
-        #         getattr(self.model, module).apply(self.weights_init)
-        # if self.checkpoint:
-        #     print('Loading initial model weights from {:s}'.format(self.checkpoint))
-        #     self.resume_checkpoint(self.checkpoint)
-
-        # else:
 
         def xavier(param):
             init.xavier_uniform_(param)
@@ -207,16 +176,18 @@ class Solver(object):
             if isinstance(m, nn.Conv2d):
                 xavier(m.weight.data)
                 m.bias.data.zero_()
-        try:
-            self.model.base.apply(weights_init)
-            # self.model.extras.apply(weights_init)
-            self.model.loc.apply(weights_init)
-            self.model.conf.apply(weights_init)
-        except:
-            pass
+        
+        for key in init_scope:
+            self.model._modules[key].apply(weights_init)
+            
+        # try:
+        #     self.model.base.apply(weights_init)
+        #     # self.model.extras.apply(weights_init)
+        #     self.model.loc.apply(weights_init)
+        #     self.model.conf.apply(weights_init)
+        # except:
+        #     pass
 
-        start_epoch = 0
-        return start_epoch
 
     def trainable_param(self, trainable_scope):
         for param in self.model.parameters():
@@ -234,24 +205,23 @@ class Solver(object):
 
     def train_model(self):
         previous = self.find_previous()
-
         if self.checkpoint:
-            # self.initialize()
+            # init all, resume weights will be update by resume_checkpoint()
+            self.initialize([key for key in self.model._modules if key != 'softmax'])
             print('Loading initial model weights from {:s}'.format(self.checkpoint))
-            # self.resume_checkpoint(self.checkpoint)
-            # start_epoch = int(self.cfg.RESUME_START_EPOCH)
-        # elif previous:
-        #     start_epoch = previous[0][-1]
-        #     self.resume_checkpoint(previous[1][-1])
+            self.resume_checkpoint(self.checkpoint)
+            start_epoch = int(self.cfg.RESUME_START_EPOCH)
+        elif previous:
+            print('load weights from previous:',previous[1][-1])
+            start_epoch = previous[0][-1]
+            self.model.load_state_dict(torch.load(previous[1][-1]))
         else:
-            start_epoch = self.initialize()
-
-        # export graph for the model, onnx always not works
-        # self.export_graph()
+            print('initialize all weights...')
+            self.initialize([key for key in self.model._modules if key != 'softmax'])
+            start_epoch = 0
 
         # warm_up epoch
         warm_up = self.cfg.TRAIN.LR_SCHEDULER.WARM_UP_EPOCHS
-        # print(type(start_epoch),type(self.max_epochs))
 
         for epoch in iter(range(start_epoch+1, self.max_epochs+1)):
             #learning rate
@@ -285,16 +255,21 @@ class Solver(object):
         else:
                 
             previous = self.find_previous()
-            for epoch, resume_checkpoint in zip(previous[0], previous[1]):
-                if self.cfg.TEST.TEST_SCOPE[0] <= epoch <= self.cfg.TEST.TEST_SCOPE[1]:
-                    sys.stdout.write('\rEpoch {epoch:d}/{max_epochs:d}:\n'.format(epoch=epoch, max_epochs=self.cfg.TEST.TEST_SCOPE[1]))
-                    self.resume_checkpoint(resume_checkpoint)
-                    if 'eval' in cfg.PHASE:
-                        self.eval_epoch(self.model, self.eval_loader, self.detector, self.criterion, self.writer, epoch, self.use_gpu)
-                    if 'test' in cfg.PHASE:
-                        self.test_epoch(self.model, self.test_loader, self.detector, self.output_dir , self.use_gpu)
-                    if 'visualize' in cfg.PHASE:
-                        self.visualize_epoch(self.model, self.visualize_loader, self.priorbox, self.writer, epoch,  self.use_gpu)
+            # for epoch, resume_checkpoint in zip(previous[0], previous[1]):
+                # if self.cfg.TEST.TEST_SCOPE[0] <= epoch <= self.cfg.TEST.TEST_SCOPE[1]:
+                    # sys.stdout.write('\rEpoch {epoch:d}/{max_epochs:d}:\n'.format(epoch=epoch, max_epochs=self.cfg.TEST.TEST_SCOPE[1]))
+            # self.resume_checkpoint(resume_checkpoint)
+            if len(previous[1]) > 0:
+                print('load weights from %s' % previous[1][-1])
+                self.model.load_state_dict(torch.load(previous[1][-1]))
+            else:
+                raise ValueError('not weights to load...')
+            if 'eval' in cfg.PHASE:
+                self.eval_epoch(self.model, self.eval_loader, self.detector, self.criterion, self.writer, epoch, self.use_gpu)
+            if 'test' in cfg.PHASE:
+                self.test_epoch(self.model, self.test_loader, self.detector, self.output_dir , self.use_gpu)
+            if 'visualize' in cfg.PHASE:
+                self.visualize_epoch(self.model, self.visualize_loader, self.priorbox, self.writer, epoch,  self.use_gpu)
 
 
 
@@ -337,11 +312,14 @@ class Solver(object):
             time = _t.toc()
             loc_loss += loss_l.item()
             conf_loss += loss_c.item()
-
-            # log per iter
-            log = '\r==>Train: || {iters:d}/{epoch_size:d} in {time:.3f}s [{prograss}] || loc_loss: {loc_loss:.4f} cls_loss: {cls_loss:.4f}\r'.format(
-                    prograss='#'*int(round(10*iteration/epoch_size)) + '-'*int(round(10*(1-iteration/epoch_size))), iters=iteration, epoch_size=epoch_size,
+            
+            log = '\r==>Train: || {iters:d}/{epoch_size:d} in {time:.3f}s || loc_loss: {loc_loss:.4f} cls_loss: {cls_loss:.4f}\r'.format(
+                    iters=iteration, epoch_size=epoch_size,
                     time=time, loc_loss=loss_l.item(), cls_loss=loss_c.item())
+            # log per iter
+            # log = '\r==>Train: || {iters:d}/{epoch_size:d} in {time:.3f}s [{prograss}] || loc_loss: {loc_loss:.4f} cls_loss: {cls_loss:.4f}\r'.format(
+            #         prograss='#'*int(round(10*iteration/epoch_size)) + '-'*int(round(10*(1-iteration/epoch_size))), iters=iteration, epoch_size=epoch_size,
+            #         time=time, loc_loss=loss_l.item(), cls_loss=loss_c.item())
 
             sys.stdout.write(log)
             sys.stdout.flush()
@@ -435,73 +413,9 @@ class Solver(object):
         viz_pr_curve(writer, prec, rec, epoch)
         viz_archor_strategy(writer, size, gt_label, epoch)
 
-    # TODO: HOW TO MAKE THE DATALOADER WITHOUT SHUFFLE
-    # def test_epoch(self, model, data_loader, detector, output_dir, use_gpu):
-    #     # sys.stdout.write('\r===> Eval mode\n')
-
-    #     model.eval()
-
-    #     num_images = len(data_loader.dataset)
-    #     num_classes = detector.num_classes
-    #     batch_size = data_loader.batch_size
-    #     all_boxes = [[[] for _ in range(num_images)] for _ in range(num_classes)]
-    #     empty_array = np.transpose(np.array([[],[],[],[],[]]),(1,0))
-
-    #     epoch_size = len(data_loader)
-    #     batch_iterator = iter(data_loader)
-
-    #     _t = Timer()
-
-    #     for iteration in iter(range((epoch_size))):
-    #         images, targets = next(batch_iterator)
-    #         targets = [[anno[0][1], anno[0][0], anno[0][1], anno[0][0]] for anno in targets] # contains the image size
-    #         if use_gpu:
-    #             images = Variable(images.cuda())
-    #         else:
-    #             images = Variable(images)
-
-    #         _t.tic()
-    #         # forward
-    #         out = model(images, is_train=False)
-
-    #         # detect
-    #         detections = detector.forward(out)
-
-    #         time = _t.toc()
-
-    #         # TODO: make it smart:
-    #         for i, (dets, scale) in enumerate(zip(detections, targets)):
-    #             for j in range(1, num_classes):
-    #                 cls_dets = list()
-    #                 for det in dets[j]:
-    #                     if det[0] > 0:
-    #                         d = det.cpu().numpy()
-    #                         score, box = d[0], d[1:]
-    #                         box *= scale
-    #                         box = np.append(box, score)
-    #                         cls_dets.append(box)
-    #                 if len(cls_dets) == 0:
-    #                     cls_dets = empty_array
-    #                 all_boxes[j][iteration*batch_size+i] = np.array(cls_dets)
-
-    #         # log per iter
-    #         log = '\r==>Test: || {iters:d}/{epoch_size:d} in {time:.3f}s [{prograss}]\r'.format(
-    #                 prograss='#'*int(round(10*iteration/epoch_size)) + '-'*int(round(10*(1-iteration/epoch_size))), iters=iteration, epoch_size=epoch_size,
-    #                 time=time)
-    #         sys.stdout.write(log)
-    #         sys.stdout.flush()
-
-    #     # write result to pkl
-    #     with open(os.path.join(output_dir, 'detections.pkl'), 'wb') as f:
-    #         pickle.dump(all_boxes, f, pickle.HIGHEST_PROTOCOL)
-
-    #     print('Evaluating detections')
-    #     data_loader.dataset.evaluate_detections(all_boxes, output_dir)
-
-
     def test_epoch(self, model, data_loader, detector, output_dir, use_gpu):
         model.eval()
-
+        
         dataset = data_loader.dataset
         num_images = len(dataset)
         num_classes = detector.num_classes
@@ -511,40 +425,22 @@ class Solver(object):
         _t = Timer()
 
         for i in iter(range((num_images))):
-            # _t.tic()
+            _t.tic()
 
             img = dataset.pull_image(i)
-            # scale = [img.shape[1], img.shape[0], img.shape[1], img.shape[0]]
-            h,w = img.shape[0], img.shape[1]
-            if use_gpu:
-                with torch.no_grad():
-                    images = Variable(dataset.preproc(img)[0].unsqueeze(0).cuda())
-            else:
-                with torch.no_grad():              
-                    images = Variable(dataset.preproc(img)[0].unsqueeze(0))
-            _t.tic()
-            # forward
-            out = model(images, phase='eval')
-            # time = _t.toc()
+            h,w,_c = img.shape
+            images = Variable(dataset.preproc(img)[0].unsqueeze(0).cuda())
 
+            # if use_gpu:
+                # with torch.no_grad():
+                    # images = Variable(dataset.preproc(img)[0].unsqueeze(0).cuda())
+            # else:
+                # with torch.no_grad():              
+                    # images = Variable(dataset.preproc(img)[0].unsqueeze(0))
+
+            out = model(images, phase='eval')
             # detect result: [N, num_class, top_k, 5]
             detections = detector.forward(out)
-            # print('shape',detections.shape)
-            time = _t.toc()
-
-            # TODO: make it smart:
-            # for j in range(1, num_classes):
-            #     cls_dets = list()
-            #     for det in detections[0][j]:
-            #         if det[0] > 0:
-            #             d = det.cpu().numpy()
-            #             score, box = d[0], d[1:]
-            #             box *= scale
-            #             box = np.append(box, score)
-            #             cls_dets.append(box)
-            #     if len(cls_dets) == 0:
-            #         cls_dets = empty_array
-            #     all_boxes[j][i] = np.array(cls_dets)
 
             for j in range(1, detections.size(1)):
                 dets = detections[0, j, :]
@@ -562,22 +458,20 @@ class Solver(object):
                                     scores[:, np.newaxis])).astype(np.float32,
                                                                     copy=False)
                 all_boxes[j][i] = cls_dets
-            # log per iter
-            # log = '\r==>Test: || {iters:d}/{epoch_size:d} in {time:.3f}s \r'.format(
-            #         prograss='#'*int(round(10*i/num_images)) + '-'*int(round(10*(1-i/num_images))), iters=i, epoch_size=num_images,
-            #         time=time)
-            # time = _t.toc()
+
+            time = _t.toc()
 
             log = '\r==>Test: || {iters:d}/{epoch_size:d} in {time:.3f}s \r'.format(iters=i, epoch_size=num_images,
                     time=time)
             sys.stdout.write(log)
             sys.stdout.flush()
-
       
         # write result to pkl
         with open(os.path.join(output_dir, 'detections.pkl'), 'wb') as f:
             pickle.dump(all_boxes, f, pickle.HIGHEST_PROTOCOL)
-
+        
+        # with open(os.path.join(output_dir, 'detections.pkl'), 'rb') as f:
+        #     all_boxes = pickle.load(f)
         # currently the COCO dataset do not return the mean ap or ap 0.5:0.95 values
         print('Evaluating detections')
         data_loader.dataset.evaluate_detections(all_boxes, output_dir)

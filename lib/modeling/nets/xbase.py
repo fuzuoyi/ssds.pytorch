@@ -10,7 +10,7 @@ base = {
 
 
 def base_net(cfg, i, batch_norm=False):
-    print(cfg)
+
     layers = []
     in_channels = i
     for k,v in enumerate(cfg):
@@ -38,9 +38,7 @@ def base_net(cfg, i, batch_norm=False):
 def xbase():
     return base_net(base['x_pool'],3,True)
 xbase.name = 'xbase'
-# def vgg16():
-#     return vgg(base['vgg16'], 3)
-# vgg16.name='vgg16'
+
 
 
 
