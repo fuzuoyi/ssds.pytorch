@@ -16,11 +16,9 @@ else:
 
 
 VOC_CLASSES = ( '__background__', # always index 0
-    'aeroplane', 'bicycle', 'bird', 'boat',
-    'bottle', 'bus', 'car', 'cat', 'chair',
-    'cow', 'diningtable', 'dog', 'horse',
-    'motorbike', 'person', 'pottedplant',
-    'sheep', 'sofa', 'train', 'tvmonitor')
+        'car',
+        'truck',
+        'pedestrian')
 
 # for making bounding boxes pretty
 COLORS = ((255, 0, 0, 128), (0, 255, 0, 128), (0, 0, 255, 128),
@@ -131,7 +129,7 @@ class AnnotationTransform(object):
         return res  # [[xmin, ymin, xmax, ymax, label_ind], ... ]
 
 
-class VOCDetection(data.Dataset):
+class UdacityDetection(data.Dataset):
 
     """VOC Detection Dataset Object
 
@@ -307,7 +305,6 @@ class VOCDetection(data.Dataset):
     def _do_python_eval(self, output_dir='output'):
         rootpath = os.path.join(self.root, 'VOC' + self._year)
         name = self.image_set[0][1]
-        # annopath = rootpath + '/Annotations/{:s}.xml'
         annopath = os.path.join(
                                 rootpath,
                                 'Annotations',

@@ -1,9 +1,13 @@
 from lib.dataset import voc
 from lib.dataset import coco
+from lib.dataset import kitti
+from lib.dataset import udacity
 
 dataset_map = {
                 'voc': voc.VOCDetection,
                 'coco': coco.COCODetection,
+                'udacity': udacity.UdacityDetection,
+                'kitti': kitti.KITTIDetection,
             }
 
 def gen_dataset_fn(name):
