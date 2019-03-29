@@ -56,7 +56,7 @@ class VOCSegmentation(data.Dataset):
         self._annopath = os.path.join(
             self.root, dataset_name, 'SegmentationClass', '%s.png')
         self._imgpath = os.path.join(
-            self.root, dataset_name, 'JPEGImages', '%s.jpg')
+            self.root, dataset_name, 'JPEGImages', '%s.png')
         self._imgsetpath = os.path.join(
             self.root, dataset_name, 'ImageSets', 'Segmentation', '%s.txt')
 
@@ -120,7 +120,7 @@ class AnnotationTransform(object):
             pts = ['xmin', 'ymin', 'xmax', 'ymax']
             bndbox = []
             for i, pt in enumerate(pts):
-                cur_pt = int(bbox.find(pt).text) - 1
+                cur_pt = int(float(bbox.find(pt).text)) - 1
                 # scale height or width
                 # cur_pt = cur_pt / width if i % 2 == 0 else cur_pt / height
                 bndbox.append(cur_pt)
@@ -158,7 +158,7 @@ class KITTIDetection(data.Dataset):
         self.target_transform = target_transform
         self.name = dataset_name
         self._annopath = os.path.join('%s', 'Annotations', '%s.xml')
-        self._imgpath = os.path.join('%s', 'JPEGImages', '%s.jpg')
+        self._imgpath = os.path.join('%s', 'JPEGImages', '%s.png')
         self.ids = list()
         for (year, name) in image_sets:
             self._year = year
