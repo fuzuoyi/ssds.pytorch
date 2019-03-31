@@ -176,10 +176,11 @@ class Solver(object):
             if isinstance(m, nn.Conv2d):
                 xavier(m.weight.data)
                 m.bias.data.zero_()
-        
-        for key in init_scope:
-            self.model._modules[key].apply(weights_init)
-            
+        try:
+            for key in init_scope:
+                self.model._modules[key].apply(weights_init)
+        except:
+            pass       
         # try:
         #     self.model.base.apply(weights_init)
         #     # self.model.extras.apply(weights_init)
@@ -426,7 +427,7 @@ class Solver(object):
 
         for i in iter(range((num_images))):
             _t.tic()
-
+            
             img = dataset.pull_image(i)
             h,w,_c = img.shape
             images = Variable(dataset.preproc(img)[0].unsqueeze(0).cuda())
@@ -447,6 +448,7 @@ class Solver(object):
                 mask = dets[:, 0].gt(0.).expand(5, dets.size(0)).t()
                 dets = torch.masked_select(dets, mask).view(-1, 5)
                 if dets.size(0) == 0:
+                    all_boxes[j][i] = empty_array
                     continue
                 boxes = dets[:, 1:]
                 boxes[:, 0] *= w

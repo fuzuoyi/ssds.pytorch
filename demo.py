@@ -97,7 +97,7 @@ def demo_live(args, video_path):
             break
 
         # 5. detect
-        _labels, _scores, _coords = object_detector.predict(image)
+        _labels, _scores, _coords = object_detector.predict(image,threshold=0.6)
 
         # 6. draw bounding box on the image
         for labels, scores, coords in zip(_labels, _scores, _coords):

@@ -59,8 +59,8 @@ class ObjectDetector:
     def predict(self, img, threshold=0.6, check_time=False):
         # make sure the input channel is 3 
         assert img.shape[2] == 3
-        scale = torch.Tensor([img.shape[1::-1], img.shape[1::-1]])
-        
+        scale = torch.Tensor([img.shape[1::-1], img.shape[1::-1]]).view(-1)
+        # print(scale)
         _t = {'preprocess': Timer(), 'net_forward': Timer(), 'detect': Timer(), 'output': Timer()}
         
         # preprocess image
