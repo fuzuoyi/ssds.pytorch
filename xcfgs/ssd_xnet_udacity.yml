@@ -1,0 +1,53 @@
+MODEL:
+  SSDS: xssd
+  NETS: xnet
+  IMAGE_SIZE: [300, 300]
+  NUM_CLASSES: 21
+  FEATURE_LAYER: [[6, 9, 13, 18, 22], [64, 96, 160, 320, 480]]
+  STEPS: [[8, 8], [16, 16], [32, 32], [64, 64], [100, 100]]
+  SIZES: [[30, 30], [60, 60], [111, 111], [162, 162], [213, 213], [264, 264]]
+  ASPECT_RATIOS: [[1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2]]
+
+TRAIN:
+  MAX_EPOCHS: 240
+  CHECKPOINTS_EPOCHS: 10
+  BATCH_SIZE: 32
+  TRAINABLE_SCOPE: 'base,norm,extras,loc,conf'
+  RESUME_SCOPE: 'base,norm,extras,loc,conf'
+  OPTIMIZER:
+    OPTIMIZER: sgd
+    LEARNING_RATE: 0.02
+    MOMENTUM: 0.9
+    WEIGHT_DECAY: 0.0001
+  LR_SCHEDULER:
+    SCHEDULER: SGDR
+    # SCHEDULER: multi_step
+    # GAMMA: 0.1
+    # STEPS: [155,195]
+
+TEST:
+  BATCH_SIZE: 32
+
+MATCHER:
+  MATCHED_THRESHOLD: 0.5
+  UNMATCHED_THRESHOLD: 0.5
+  NEGPOS_RATIO: 3
+
+POST_PROCESS:
+  SCORE_THRESHOLD: 0.1
+  IOU_THRESHOLD: 0.6
+  MAX_DETECTIONS: 100
+
+DATASET:
+  DATASET: 'udacity'
+  DATASET_DIR: './data/udacity'
+  TRAIN_SETS: [['2012', 'trainval']]
+  TEST_SETS:  [['2007', 'test']]
+
+EXP_DIR: './experiments/models/ssd_xnet_udacity'
+LOG_DIR: './experiments/models/ssd_xnet_udacity'
+# RESUME_CHECKPOINT: './weights/xbase_ssd_voc_76.pth'
+# RESUME_CHECKPOINT: './experiments/models/ssd_xbase_udacity/xssd_xbase_udacity_epoch_200.pth'
+# RESUME_CHECKPOINT: ''
+# RESUME_START_EPOCH: 0
+PHASE: ['train']

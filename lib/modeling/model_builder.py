@@ -27,8 +27,10 @@ from lib.modeling.nets import resnet
 from lib.modeling.nets import mobilenet
 from lib.modeling.nets import darknet
 from lib.modeling.nets import xbase
+from lib.modeling.nets import xnet
 networks_map = {
                     'xbase':xbase.xbase,
+                    'xnet':xnet.xx_net,
                     'vgg16': vgg.vgg16,
                     'resnet_18': resnet.resnet_18,
                     'resnet_34': resnet.resnet_34,

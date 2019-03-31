@@ -54,7 +54,7 @@ def profile(model, input_size, custom_ops={}, device="cpu"):
             print("Not implemented for ", m)
 
         if fn is not None:
-            print("Register FLOP counter for module %s" % str(m))
+            # print("Register FLOP counter for module %s" % str(m))
             handler = m.register_forward_hook(fn)
             handler_collection.append(handler)
 
